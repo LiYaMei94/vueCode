@@ -28,7 +28,6 @@ Vue.prototype.$mount = function (
   // 获取el对应的DOM对象
   el = el && query(el);
 
-  /* istanbul ignore if */
   // el不能是html或者body，vue实例只能挂载在普通的dom元素上
   if (el === document.body || el === document.documentElement) {
     // 如果是开发模式，会在浏览器控制台报出警告
@@ -42,7 +41,7 @@ Vue.prototype.$mount = function (
 
   const options = this.$options;
   // resolve template/el and convert to render function
-  // 把template转换成render函数
+  // 把template/el转换成render函数
   if (!options.render) {
     let template = options.template;
     if (template) {
