@@ -61,6 +61,11 @@ export function initState(vm: Component) {
   }
 }
 
+/**
+ * 把props中的成员转换成响应式数据注入到vue上
+ * @param {*} vm 
+ * @param {*} propsOptions 
+ */
 function initProps(vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {};
   const props = (vm._props = {});
@@ -113,6 +118,8 @@ function initProps(vm: Component, propsOptions: Object) {
 
 function initData(vm: Component) {
   let data = vm.$options.data;
+  // getData(data, vm)：初始化组件中的data
+  // data || {}：初始化vue实例中的data
   data = vm._data = typeof data === "function" ? getData(data, vm) : data || {};
   if (!isPlainObject(data)) {
     data = {};
@@ -129,6 +136,7 @@ function initData(vm: Component) {
   const methods = vm.$options.methods;
   let i = keys.length;
   while (i--) {
+    // 判断data中的属性是否和props、methods中的属性重名
     const key = keys[i];
     if (process.env.NODE_ENV !== "production") {
       if (methods && hasOwn(methods, key)) {
@@ -146,10 +154,13 @@ function initData(vm: Component) {
           vm
         );
     } else if (!isReserved(key)) {
+      // proxy：把key注入到vue实例
+      // `_data`：在proxy函数中调用get方法时通过this['_data'][key]获取到key所对应的值
       proxy(vm, `_data`, key);
     }
   }
   // observe data
+  // 把data转换成响应式对象
   observe(data, true /* asRootData */);
 }
 
@@ -263,6 +274,11 @@ function createGetterInvoker(fn) {
   };
 }
 
+/**
+ * 把选项中的methods注入到vue实例
+ * @param {*} vm 
+ * @param {*} methods 
+ */
 function initMethods(vm: Component, methods: Object) {
   const props = vm.$options.props;
   for (const key in methods) {
@@ -276,9 +292,13 @@ function initMethods(vm: Component, methods: Object) {
           vm
         );
       }
+      // methods中key和props不能重名
       if (props && hasOwn(props, key)) {
         warn(`Method "${key}" has already been defined as a prop.`, vm);
       }
+      // isReserved：判断方法名称是不是以下划线（_）或者$开头
+      // 以下划线（_）开头的属性是私有的，不能作为方法名
+      // 以$开头的成员认为是vue提供的成员，不能作为方法名
       if (key in vm && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +
@@ -286,6 +306,7 @@ function initMethods(vm: Component, methods: Object) {
         );
       }
     }
+    // bind：把当前函数的this指向改变为vue实例
     vm[key] =
       typeof methods[key] !== "function" ? noop : bind(methods[key], vm);
   }
