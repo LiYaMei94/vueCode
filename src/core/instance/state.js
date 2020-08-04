@@ -155,7 +155,7 @@ function initData(vm: Component) {
         );
     } else if (!isReserved(key)) {
       // proxy：把key注入到vue实例
-      // `_data`：在proxy函数中调用get方法时通过this['_data'][key]获取到key所对应的值
+      // `_data`：在proxy函数中调用get方法时通过this['_data'][key]
       proxy(vm, `_data`, key);
     }
   }
