@@ -115,6 +115,8 @@ export function renderMixin(Vue: Class<Component>) {
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
       currentRenderingInstance = vm;
+      // render：用户定义的render或者模板渲染的render
+      // 定义render函数传入的h参数：vm.$createElement
       vnode = render.call(vm._renderProxy, vm.$createElement);
     } catch (e) {
       handleError(e, vm, `render`);
@@ -147,7 +149,7 @@ export function renderMixin(Vue: Class<Component>) {
       if (process.env.NODE_ENV !== "production" && Array.isArray(vnode)) {
         warn(
           "Multiple root nodes returned from render function. Render function " +
-            "should return a single root node.",
+          "should return a single root node.",
           vm
         );
       }
