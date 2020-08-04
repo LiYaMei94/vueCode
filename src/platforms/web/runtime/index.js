@@ -30,14 +30,14 @@ Vue.config.isUnknownElement = isUnknownElement;
 // install platform runtime directives & components
 // extend：把第二个参数的所有成员复制到第一个对象参数中
 // Vue.options中存储的组件都是全局组件
-
 // 注册指令 v-model v-show
 extend(Vue.options.directives, platformDirectives);
 // 注册组件 v-transition v-transition-group
+// 在项目中注册的组件也都存储在Vue.options.components中
 extend(Vue.options.components, platformComponents);
 
 // install platform patch function
-// inBrowser是判断typeof window !== 'undefined'
+// inBrowser：类型是常量，通过typeof window !== 'undefined'来判断当前是不是浏览器环境
 Vue.prototype.__patch__ = inBrowser ? patch : noop; // noop：空函数
 
 // public mount method
@@ -63,7 +63,7 @@ if (inBrowser) {
       ) {
         console[console.info ? "info" : "log"](
           "Download the Vue Devtools extension for a better development experience:\n" +
-            "https://github.com/vuejs/vue-devtools"
+          "https://github.com/vuejs/vue-devtools"
         );
       }
     }
@@ -75,8 +75,8 @@ if (inBrowser) {
     ) {
       console[console.info ? "info" : "log"](
         `You are running Vue in development mode.\n` +
-          `Make sure to turn on production mode when deploying for production.\n` +
-          `See more tips at https://vuejs.org/guide/deployment.html`
+        `Make sure to turn on production mode when deploying for production.\n` +
+        `See more tips at https://vuejs.org/guide/deployment.html`
       );
     }
   }, 0);

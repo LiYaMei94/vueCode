@@ -17,18 +17,21 @@ const banner =
   ' */'
 
 const weexFactoryPlugin = {
-  intro () {
+  intro() {
     return 'module.exports = function weexFactory (exports, document) {'
   },
-  outro () {
+  outro() {
     return '}'
   }
 }
 
 const aliases = require('./alias')
 const resolve = p => {
+  // 根据传入的路径的前半部分去alias.js文件中找对应的别名,即拿到web
+  // 'web/entry-runtime-with-compiler.js'
   const base = p.split('/')[0]
   if (aliases[base]) {
+    // p.slice(base.length + 1)拿到web之后的文件名
     return path.resolve(aliases[base], p.slice(base.length + 1))
   } else {
     return path.resolve(__dirname, '../', p)
@@ -121,12 +124,13 @@ const builds = {
   },
   // Runtime+compiler development build (Browser)
   'web-full-dev': {
+    // resolve把传入的路径转换成绝对路径
     entry: resolve('web/entry-runtime-with-compiler.js'),
     dest: resolve('dist/vue.js'),
     format: 'umd',
     env: 'development',
     alias: { he: './entity-decoder' },
-    banner
+    banner // 文件头
   },
   // Runtime+compiler production build  (Browser)
   'web-full-prod': {
@@ -213,13 +217,15 @@ const builds = {
   }
 }
 
-function genConfig (name) {
+function genConfig(name) {
+  // builds：对象，存储的是环境变量的值
   const opts = builds[name]
   const config = {
     input: opts.entry,
     external: opts.external,
     plugins: [
       flow(),
+      // aliases是alias.js中导出的src目录下的文件路径
       alias(Object.assign({}, aliases, opts.alias))
     ].concat(opts.plugins || []),
     output: {
@@ -234,7 +240,6 @@ function genConfig (name) {
       }
     }
   }
-
   // built-in vars
   const vars = {
     __WEEX__: !!opts.weex,
@@ -250,19 +255,17 @@ function genConfig (name) {
     vars['process.env.NODE_ENV'] = JSON.stringify(opts.env)
   }
   config.plugins.push(replace(vars))
-
   if (opts.transpile !== false) {
     config.plugins.push(buble())
   }
-
   Object.defineProperty(config, '_name', {
     enumerable: false,
     value: name
   })
-
   return config
 }
 
+// 导出配置对象
 if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET)
 } else {

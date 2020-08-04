@@ -46,7 +46,9 @@ Vue.prototype.$mount = function (
     let template = options.template;
     if (template) {
       if (typeof template === "string") {
+        // 判断是不是id选择器
         if (template.charAt(0) === "#") {
+          // 获取对应的DOM对象的innerHtml
           template = idToTemplate(template);
           /* istanbul ignore if */
           if (process.env.NODE_ENV !== "production" && !template) {
@@ -57,6 +59,7 @@ Vue.prototype.$mount = function (
           }
         }
       } else if (template.nodeType) {
+        // 如果模板是元素，返回元素的innerHTML
         template = template.innerHTML;
       } else {
         if (process.env.NODE_ENV !== "production") {
