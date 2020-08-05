@@ -29,7 +29,7 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
-export function initLifecycle (vm: Component) {
+export function initLifecycle(vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
@@ -55,7 +55,7 @@ export function initLifecycle (vm: Component) {
   vm._isBeingDestroyed = false
 }
 
-export function lifecycleMixin (Vue: Class<Component>) {
+export function lifecycleMixin(Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
@@ -138,14 +138,16 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
-export function mountComponent (
+export function mountComponent(
   vm: Component,
   el: ?Element,
   hydrating?: boolean
 ): Component {
   vm.$el = el
+  // 判断是否传入了render函数
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
+    // 在运行时版传入了template，并且在开发环境下发出警告：当前是运行时版，编译器无效，应该传入render函数或者改成编译器版本
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
@@ -164,6 +166,7 @@ export function mountComponent (
       }
     }
   }
+  // 如果有render函数执行beforeMount钩子函数，挂载之前
   callHook(vm, 'beforeMount')
 
   let updateComponent
@@ -195,7 +198,7 @@ export function mountComponent (
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
   new Watcher(vm, updateComponent, noop, {
-    before () {
+    before() {
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
@@ -212,7 +215,7 @@ export function mountComponent (
   return vm
 }
 
-export function updateChildComponent (
+export function updateChildComponent(
   vm: Component,
   propsData: ?Object,
   listeners: ?Object,
@@ -292,14 +295,14 @@ export function updateChildComponent (
   }
 }
 
-function isInInactiveTree (vm) {
+function isInInactiveTree(vm) {
   while (vm && (vm = vm.$parent)) {
     if (vm._inactive) return true
   }
   return false
 }
 
-export function activateChildComponent (vm: Component, direct?: boolean) {
+export function activateChildComponent(vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = false
     if (isInInactiveTree(vm)) {
@@ -317,7 +320,7 @@ export function activateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
-export function deactivateChildComponent (vm: Component, direct?: boolean) {
+export function deactivateChildComponent(vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = true
     if (isInInactiveTree(vm)) {
@@ -333,7 +336,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
-export function callHook (vm: Component, hook: string) {
+export function callHook(vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
   const handlers = vm.$options[hook]

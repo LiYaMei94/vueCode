@@ -70,12 +70,15 @@ Vue.prototype.$mount = function (
     } else if (el) {
       template = getOuterHTML(el);
     }
+
+    // 执行完上面的if语句拿到模板，开始执行编译
     if (template) {
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== "production" && config.performance && mark) {
         mark("compile");
       }
 
+      // compileToFunctions：把template编译成render函数
       const { render, staticRenderFns } = compileToFunctions(
         template,
         {
@@ -99,6 +102,7 @@ Vue.prototype.$mount = function (
   }
 
   // 如果传递了render函数会调用mount方法渲染DOM
+  // mount：是src\platforms\web\runtime\index.js中重新定义的mount方法
   return mount.call(this, el, hydrating);
 };
 
@@ -107,11 +111,17 @@ Vue.prototype.$mount = function (
  * of SVG elements in IE as well.
  */
 function getOuterHTML(el: Element): string {
+  // outerHTML设置或获取对象及其内容的HTML形式
+  // innerHTML 设置或获取位于对象起始和结束标签内的HTML
+
+  // 如果el.outerHTML存在就返回作为模板
   if (el.outerHTML) {
     return el.outerHTML;
   } else {
+    // 如果el.el.outerHTML不存在，就创建一个div包裹深克隆el的DOM元素
     const container = document.createElement("div");
     container.appendChild(el.cloneNode(true));
+    // 返回div的innerHTML作为模板
     return container.innerHTML;
   }
 }
