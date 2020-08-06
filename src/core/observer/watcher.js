@@ -123,6 +123,8 @@ export default class Watcher {
         traverse(value)
       }
       popTarget()
+
+      // 把watcher从dep的subs数组中移除,把watcher中记录的dep也移除
       this.cleanupDeps()
     }
     return value
@@ -137,6 +139,7 @@ export default class Watcher {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
+        // 把watcher对象添加到subs数组中
         dep.addSub(this)
       }
     }

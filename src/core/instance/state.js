@@ -53,6 +53,7 @@ export function initState(vm: Component) {
   if (opts.data) {
     initData(vm);
   } else {
+    // options中没有data选项，设置data的初始值是{}并转换成响应式的
     observe((vm._data = {}), true /* asRootData */);
   }
   if (opts.computed) initComputed(vm, opts.computed);
@@ -161,6 +162,7 @@ function initData(vm: Component) {
   }
   // observe data
   // 把data转换成响应式对象
+  // 响应式处理的入口
   observe(data, true /* asRootData */);
 }
 

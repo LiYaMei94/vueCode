@@ -72,7 +72,7 @@ export function initMixin(Vue: Class<Component>) {
     // 找vm.$options.inject中的所有属性，并且在vm._provided存在，即在父组件的provide中提供了这些属性时，把这些属性
     // 注入到vue实例，并设置成响应式的
     initInjections(vm); // resolve injections before data/props
-    // 初始化vm的_props / methods / _data / computed / watch，并把这些属性的成员都注入到vue实例上
+    // 初始化vue实例的状态  _props / methods / _data / computed / watch，并把这些属性的成员都注入到vue实例上
     initState(vm);
     // 找到vm.$options.provide的所有属性，存储在vm._provided
     initProvide(vm); // resolve provide after data/props
