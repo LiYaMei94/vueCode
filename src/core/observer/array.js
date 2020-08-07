@@ -4,12 +4,13 @@
  */
 
 import { def } from '../util/index'
-// Array.prototype  属性表示 Array 构造函数的原型
+
 const arrayProto = Array.prototype
-// 使用数组arrayProto作为原型创建一个新对象
+
+// 新创建一个对象，原型指向数组的构造函数的prototype
 export const arrayMethods = Object.create(arrayProto)
 
-// 修改数组的方法
+// 修改数组的方法，以下的方法都会修改原数组
 const methodsToPatch = [
   'push',
   'pop',
@@ -28,20 +29,24 @@ methodsToPatch.forEach(function (method) {
   // 获取数组的原始方法
   const original = arrayProto[method]
   // def:封装Object.defineProperty
-  // 调用def重新定义数组的原始方法，例如push，pop等
+  // 调用def将当前方法method注入到arrayMethods对象中，值是mutator函数
+  // 重新定义数组的原始方法
   def(arrayMethods, method, function mutator(...args) {
     // 执行原始数组的方法，拿到改变之后的数组
+    // result中包含了inserted
     const result = original.apply(this, args)
     // 数组所关联的__ob__对象
     const ob = this.__ob__
-    let inserted // 存储数组新增元素
+
+    // 存储数组新增元素，使用的是浅拷贝，所以inserted改变，args就会改变，最后result中新增的元素就也成为了响应式的
+    let inserted
     switch (method) {
       case 'push':
       case 'unshift':
         inserted = args // args：新增的元素
         break
       case 'splice':
-        // 传入的第三个参数是数组新增的元素
+        // splice接收的第三个参数是数组新增的元素
         inserted = args.slice(2)
         break
     }
