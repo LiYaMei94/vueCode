@@ -328,17 +328,23 @@ export function set(target: Array<any> | Object, key: any, val: any): any {
 /**
  * Delete a property and trigger change if necessary.
  */
+// 删除属性并在必要时触发更改
 export function del(target: Array<any> | Object, key: any) {
+  // 如果是在开发环境且((target === undefined || target === null)||(target是原始值))的情况下发出警告
+  // 原始值：string、number、symbol和boolean
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 如果target是数组且key是有效的数组索引，调用splice删除数组的第key
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.splice(key, 1)
     return
   }
   const ob = (target: any).__ob__
+  // target是vue实例或者target是$data，发出警告
+  // $data的ob.vmCount是1，其他的是0
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid deleting properties on a Vue instance or its root $data ' +
@@ -346,13 +352,19 @@ export function del(target: Array<any> | Object, key: any) {
     )
     return
   }
+
+  // 如果key不在target中，直接返回，不做任何操作
   if (!hasOwn(target, key)) {
     return
   }
+
+  // 如果key在target中，调用delete target[key]删除当前项
   delete target[key]
+  // 如果target上没有__ob__属性，直接返回，不做任何操作
   if (!ob) {
     return
   }
+  // 如果target上有__ob__属性，调用ob.dep.notify()更新视图
   ob.dep.notify()
 }
 

@@ -333,10 +333,13 @@ function createWatcher(
   handler: any,
   options?: Object
 ) {
+  // 如果handler是js纯对象
   if (isPlainObject(handler)) {
     options = handler;
+    // 获取回调函数
     handler = handler.handler;
   }
+  // 如果是字符串，去methods中找想应的方法
   if (typeof handler === "string") {
     handler = vm[handler];
   }
@@ -382,13 +385,18 @@ export function stateMixin(Vue: Class<Component>) {
     cb: any,
     options?: Object
   ): Function {
+    // 获取vue实例this
     const vm: Component = this;
+    // 如果cb是js纯对象，执行createWatcher
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options);
     }
     options = options || {};
+    // 标记用户watcher
     options.user = true;
+    // 创建用户watcher对象
     const watcher = new Watcher(vm, expOrFn, cb, options);
+    // 判断 immediate 如果为 true，立即执行一次 cb 回调，并且把当前值传入
     if (options.immediate) {
       try {
         cb.call(vm, watcher.value);
@@ -400,6 +408,7 @@ export function stateMixin(Vue: Class<Component>) {
         );
       }
     }
+    // 返回取消监听的方法
     return function unwatchFn() {
       watcher.teardown();
     };
