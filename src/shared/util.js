@@ -66,8 +66,11 @@ export function isRegExp(v: any): boolean {
 /**
  * Check if val is a valid array index.
  */
+// 检查val是否是有效的数组索引
 export function isValidArrayIndex(val: any): boolean {
+  // parseFloat：字符串转数字
   const n = parseFloat(String(val));
+  // isFinite: val是否有限
   return n >= 0 && Math.floor(n) === n && isFinite(val);
 }
 
@@ -200,148 +203,4 @@ function polyfillBind(fn: Function, ctx: Object): Function {
 
   boundFn._length = fn.length;
   return boundFn;
-}
-
-function nativeBind(fn: Function, ctx: Object): Function {
-  return fn.bind(ctx);
-}
-
-export const bind = Function.prototype.bind ? nativeBind : polyfillBind;
-
-/**
- * Convert an Array-like object to a real Array.
- */
-export function toArray(list: any, start?: number): Array<any> {
-  start = start || 0;
-  let i = list.length - start;
-  const ret: Array<any> = new Array(i);
-  while (i--) {
-    ret[i] = list[i + start];
-  }
-  return ret;
-}
-
-/**
- * Mix properties into target object.
- */
-export function extend(to: Object, _from: ?Object): Object {
-  for (const key in _from) {
-    to[key] = _from[key];
-  }
-  return to;
-}
-
-/**
- * Merge an Array of Objects into a single Object.
- */
-export function toObject(arr: Array<any>): Object {
-  const res = {};
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i]) {
-      extend(res, arr[i]);
-    }
-  }
-  return res;
-}
-
-/* eslint-disable no-unused-vars */
-
-/**
- * Perform no operation.
- * Stubbing args to make Flow happy without leaving useless transpiled code
- * with ...rest (https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/).
- */
-export function noop(a?: any, b?: any, c?: any) {}
-
-/**
- * Always return false.
- */
-export const no = (a?: any, b?: any, c?: any) => false;
-
-/* eslint-enable no-unused-vars */
-
-/**
- * Return the same value.
- */
-export const identity = (_: any) => _;
-
-/**
- * Generate a string containing static keys from compiler modules.
- */
-export function genStaticKeys(modules: Array<ModuleOptions>): string {
-  return modules
-    .reduce((keys, m) => {
-      return keys.concat(m.staticKeys || []);
-    }, [])
-    .join(",");
-}
-
-/**
- * Check if two values are loosely equal - that is,
- * if they are plain objects, do they have the same shape?
- */
-export function looseEqual(a: any, b: any): boolean {
-  if (a === b) return true;
-  const isObjectA = isObject(a);
-  const isObjectB = isObject(b);
-  if (isObjectA && isObjectB) {
-    try {
-      const isArrayA = Array.isArray(a);
-      const isArrayB = Array.isArray(b);
-      if (isArrayA && isArrayB) {
-        return (
-          a.length === b.length &&
-          a.every((e, i) => {
-            return looseEqual(e, b[i]);
-          })
-        );
-      } else if (a instanceof Date && b instanceof Date) {
-        return a.getTime() === b.getTime();
-      } else if (!isArrayA && !isArrayB) {
-        const keysA = Object.keys(a);
-        const keysB = Object.keys(b);
-        return (
-          keysA.length === keysB.length &&
-          keysA.every((key) => {
-            return looseEqual(a[key], b[key]);
-          })
-        );
-      } else {
-        /* istanbul ignore next */
-        return false;
-      }
-    } catch (e) {
-      /* istanbul ignore next */
-      return false;
-    }
-  } else if (!isObjectA && !isObjectB) {
-    return String(a) === String(b);
-  } else {
-    return false;
-  }
-}
-
-/**
- * Return the first index at which a loosely equal value can be
- * found in the array (if value is a plain object, the array must
- * contain an object of the same shape), or -1 if it is not present.
- */
-export function looseIndexOf(arr: Array<mixed>, val: mixed): number {
-  for (let i = 0; i < arr.length; i++) {
-    if (looseEqual(arr[i], val)) return i;
-  }
-  return -1;
-}
-
-/**
- * Ensure a function is called only once.
- */
-export function once(fn: Function): Function {
-  let called = false;
-  return function () {
-    if (!called) {
-      called = true;
-      fn.apply(this, arguments);
-    }
-  };
 }

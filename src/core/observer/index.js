@@ -272,34 +272,55 @@ export function defineReactive(
  * triggers change notification if the property doesn't
  * already exist.
  */
+
+//  添加新属性并在属性不存在时触发更改通知
 export function set(target: Array<any> | Object, key: any, val: any): any {
+  // 如果是在开发环境且((target === undefined || target === null)||(target是原始值：string、number、symbol和boolean))的情况下
+  // 发出警告：不能给undefined、null或者string、number、symbol和boolean类型设置属性
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+
+  // 如果target是数组且key是有效的数组索引
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 数组长度取旧数组和key的最大值，增加元素的时候数组的长度也要改变
     target.length = Math.max(target.length, key)
+    // 使用splice() 修改数组的第key项的值，然后返回被删除的项目
+    // splice：在src\core\observer\array.js文件中进行了响应式的处理
     target.splice(key, 1, val)
     return val
   }
+
+  // 如果key在对象target中存在且key不是Object原型上的成员，就更新当前key所对应的值，不需要响应式的处理
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+
+  // 获取target上的observer对象
   const ob = (target: any).__ob__
+  // target是vue实例或者target是$data，发出警告
+  // $data的ob.vmCount是1，其他的是0
   if (target._isVue || (ob && ob.vmCount)) {
+    // 当前环境是开发环境，发出警告
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
       'at runtime - declare it upfront in the data option.'
     )
     return val
   }
+
+
+  // 如果ob不存在，说明target不是响应式对象，当前的key也就不需要响应式处理，直接赋值
   if (!ob) {
     target[key] = val
     return val
   }
+  // 如果ob存在调用defineReactive将当前的属性key挂载到target（ob.value）对象上，并设置响应式
   defineReactive(ob.value, key, val)
+  // 发送通知
   ob.dep.notify()
   return val
 }
