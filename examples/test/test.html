@@ -64,6 +64,15 @@
       immediate: true
     })
 
+    children = [
+      [2, 3],
+      [
+        [1, 2],
+        [45]
+      ]
+    ]
+    console.log(Array.prototype.concat.apply([], children))
+
   </script>
 
 </body>

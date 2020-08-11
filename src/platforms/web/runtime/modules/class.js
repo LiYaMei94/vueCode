@@ -11,7 +11,7 @@ import {
   genClassForVnode
 } from 'web/util/index'
 
-function updateClass (oldVnode: any, vnode: any) {
+function updateClass(oldVnode: any, vnode: any) {
   const el = vnode.elm
   const data: VNodeData = vnode.data
   const oldData: VNodeData = oldVnode.data

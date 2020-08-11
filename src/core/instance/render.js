@@ -119,6 +119,7 @@ export function renderMixin(Vue: Class<Component>) {
       currentRenderingInstance = vm;
       // render：用户定义的render或者模板渲染的render
       // 定义render函数传入的h参数：vm.$createElement
+      // vm._renderProxy:vue实例
       vnode = render.call(vm._renderProxy, vm.$createElement);
     } catch (e) {
       handleError(e, vm, `render`);

@@ -56,9 +56,13 @@ export function initLifecycle(vm: Component) {
 }
 
 export function lifecycleMixin(Vue: Class<Component>) {
+
+  // 把虚拟DOM渲染成真实DOM
+  // 首次渲染和数据更新该方法都会被调用
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
+    // _vnode是处理之后传递到_update的虚拟DOM
     const prevVnode = vm._vnode
     const restoreActiveInstance = setActiveInstance(vm)
     vm._vnode = vnode
@@ -66,9 +70,14 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // based on the rendering backend used.
     if (!prevVnode) {
       // initial render
+      // 首次渲染
+      // vm.$el真实DOM,__patch__会把真实DOM转换成虚拟DOM，再和新的VNode进行比较，把比较的结果更新到真实DOM，
+      // 然后把返回的结果存储在vm.$el
+      // vm.__patch__执行之后会把最新的VNode存储在vm._vnode
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates
+      // 数据更新，在__patch__中比较新旧VNode的差异，把比较的结果更新到真实DOM，然后把返回的结果存储在vm.$el
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
     restoreActiveInstance()
