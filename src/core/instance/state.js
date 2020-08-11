@@ -72,6 +72,7 @@ function initProps(vm: Component, propsOptions: Object) {
   if (!isRoot) {
     toggleObserving(false);
   }
+  // 遍历props对象
   for (const key in propsOptions) {
     keys.push(key);
     const value = validateProp(key, propsOptions, propsData, vm);
