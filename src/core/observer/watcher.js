@@ -107,8 +107,9 @@ export default class Watcher {
     let value
     const vm = this.vm
     try {
-      // 调用updateComponent
-      // this.getter= expOrFn,expOrFn是传入的updateComponent
+      // this.getter= expOrFn：
+      // 1. 如果是渲染watcher就是调用updateComponent
+      // 2. 如果是用户watcher就是获取属性的方法
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -201,6 +202,7 @@ export default class Watcher {
         const oldValue = this.value
         this.value = value
         if (this.user) {
+          // 如果是用户watcher需要加try catch
           try {
             this.cb.call(this.vm, value, oldValue)
           } catch (e) {
@@ -240,6 +242,7 @@ export default class Watcher {
       // remove self from vm's watcher list
       // this is a somewhat expensive operation so we skip it
       // if the vm is being destroyed.
+      // 如果vue实例正在被销毁
       if (!this.vm._isBeingDestroyed) {
         remove(this.vm._watchers, this)
       }

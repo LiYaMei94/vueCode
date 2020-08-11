@@ -10,15 +10,58 @@
 <body>
 
 
-  <div id='app'>{{arr}}</div>
+  <div id='app'>
+    <p>{{a}}</p>
+    <p>{{b}}</p>
+    <p>{{msg}}</p>
+    <p></p>
+  </div>
 
   <script src="../../dist/vue.js"></script>
   <script>
     const vm = new Vue({
       el: '#app',
       data: {
-        arr: [1, 2, 3]
+        a: '1',
+        b: '2',
+        msg: 'Hello Vue',
+        user: {
+          firstName: '诸葛',
+          lastName: '亮'
+        }
+      },
+    })
+    // expOrFn 是表达式 
+    vm.$watch('msg', function (newVal, oldVal) {
+      console.log(newVal, oldVal)
+    })
+    vm.$watch('user.firstName', function (newVal, oldVal) {
+      console.log(newVal)
+    })
+    // expOrFn 是函数 
+    vm.$watch(function () {
+      return this.a + this.b
+    }, function (newVal, oldVal) {
+      console.log(newVal)
+    })
+    // expOrFn 是对象
+    vm.$watch('msg', {
+      handler: function (newVal, oldVal) {
+        console.log(newVal)
       }
+    })
+    // deep 是 true，消耗性能 
+    vm.$watch('user', function (newVal, oldVal) {
+      // 此时的 newVal 是 user 对象 
+      console.log(newVal)
+    }, {
+      deep: true
+    })
+    // immediate 是 true ，立即执行回调函数
+    vm.$watch('msg', function (newVal, oldVal) {
+      console.log(newVal)
+    }, {
+      immediate: true
     })
 
   </script>

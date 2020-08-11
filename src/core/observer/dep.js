@@ -25,7 +25,7 @@ export default class Dep {
     this.subs.push(sub)
   }
 
-  // 添加订阅者, watcher对象
+  // 移除订阅者, watcher对象
   removeSub(sub: Watcher) {
     remove(this.subs, sub)
   }

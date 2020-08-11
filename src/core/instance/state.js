@@ -200,7 +200,7 @@ function initComputed(vm: Component, computed: Object) {
         vm,
         getter || noop,
         noop,
-        computedWatcherOptions
+        computedWatcherOptions // const computedWatcherOptions = { lazy: true }
       );
     }
 
@@ -392,7 +392,7 @@ export function stateMixin(Vue: Class<Component>) {
       return createWatcher(vm, expOrFn, cb, options);
     }
     options = options || {};
-    // 标记用户watcher
+    // 标记用户watcher，如果是用户watcher在watcher.run()中访问回调函数需要加try catch
     options.user = true;
     // 创建用户watcher对象
     const watcher = new Watcher(vm, expOrFn, cb, options);
