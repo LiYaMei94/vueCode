@@ -10,11 +10,12 @@ export let isUsingMicroTask = false
 const callbacks = []
 let pending = false
 
-function flushCallbacks () {
+function flushCallbacks() {
   pending = false
   const copies = callbacks.slice(0)
   callbacks.length = 0
   for (let i = 0; i < copies.length; i++) {
+    // 调用回调函数
     copies[i]()
   }
 }
@@ -39,6 +40,9 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
+
+// 处理回调函数队列优先使用微任务
+// 需要处理浏览器的兼容性
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   timerFunc = () => {
@@ -50,7 +54,10 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     // "force" the microtask queue to be flushed by adding an empty timer.
     if (isIOS) setTimeout(noop)
   }
+  // 使用微任务
   isUsingMicroTask = true
+
+  // 兼容PhantomJS, iOS7, Android 4.4浏览器
 } else if (!isIE && typeof MutationObserver !== 'undefined' && (
   isNative(MutationObserver) ||
   // PhantomJS and iOS 7.x
@@ -69,7 +76,11 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     counter = (counter + 1) % 2
     textNode.data = String(counter)
   }
+  // 使用微任务
   isUsingMicroTask = true
+
+  // setImmediate只在ie浏览器和nodejs中支持，但是setImmediate的性能比setTimeout好
+  // setTimeout的延迟时间即使设置为0，最快也需要4秒的时间才能执行，setImmediate会立即执行
 } else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
   // Fallback to setImmediate.
   // Technically it leverages the (macro) task queue,
@@ -84,11 +95,20 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
-export function nextTick (cb?: Function, ctx?: Object) {
+/**
+ * 回调函数执行之前数据已经改变,但是还没渲染到页面上，在回调函数中使用Promise从DOM树上获取数据，此时DOM还没有渲染到浏览器上
+ * @param {*} cb 回调函数
+ * @param {*} ctx 上下文，一般情况是vue实例
+ */
+export function nextTick(cb?: Function, ctx?: Object) {
+  // 接收Promise传递过来的resolve
   let _resolve
+  // 把回调函数加上异常处理存入callbacks数组中
   callbacks.push(() => {
     if (cb) {
+      // cb是用户传递的回调函数，需要加try catch
       try {
+        // 调用回调函数
         cb.call(ctx)
       } catch (e) {
         handleError(e, ctx, 'nextTick')
@@ -97,7 +117,9 @@ export function nextTick (cb?: Function, ctx?: Object) {
       _resolve(ctx)
     }
   })
+  // 判断队列是否正在被处理
   if (!pending) {
+    // 如果不是正在被处理,就将pending设置为true,调用timerFunc执行回调函数
     pending = true
     timerFunc()
   }

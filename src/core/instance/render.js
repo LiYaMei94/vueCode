@@ -22,6 +22,7 @@ export function initRender(vm: Component) {
   const options = vm.$options;
   const parentVnode = (vm.$vnode = options._parentVnode); // the placeholder node in parent tree
   const renderContext = parentVnode && parentVnode.context;
+  // 注册和插槽相关的属性
   vm.$slots = resolveSlots(options._renderChildren, renderContext);
   vm.$scopedSlots = emptyObject;
   // bind the createElement fn to this instance
@@ -29,11 +30,12 @@ export function initRender(vm: Component) {
   // args order: tag, data, children, normalizationType, alwaysNormalize
   // internal version is used by render functions compiled from templates
 
-  // 编译生成的render进行渲染的方法
+  // 当把template编译成render函数时会调用_c，把虚拟DOM转换成正式DOM
   vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false);
   // normalization is always applied for the public version, used in
   // user-written render functions.
-  // 对手写的render函数进行渲染的方法
+
+  // vm.$createElement：手写的render中的h函数，把虚拟DOM转换成正式DOM
   vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true);
 
   // $attrs & $listeners are exposed for easier HOC creation.
@@ -115,6 +117,9 @@ export function renderMixin(Vue: Class<Component>) {
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
       currentRenderingInstance = vm;
+      // render：用户定义的render或者模板渲染的render
+      // 定义render函数传入的h参数：vm.$createElement
+      // vm._renderProxy:vue实例
       vnode = render.call(vm._renderProxy, vm.$createElement);
     } catch (e) {
       handleError(e, vm, `render`);
@@ -147,7 +152,7 @@ export function renderMixin(Vue: Class<Component>) {
       if (process.env.NODE_ENV !== "production" && Array.isArray(vnode)) {
         warn(
           "Multiple root nodes returned from render function. Render function " +
-            "should return a single root node.",
+          "should return a single root node.",
           vm
         );
       }

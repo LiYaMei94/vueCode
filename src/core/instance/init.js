@@ -13,7 +13,7 @@ import { extend, mergeOptions, formatComponentName } from "../util/index";
 let uid = 0;
 
 export function initMixin(Vue: Class<Component>) {
-  // 给vue实例增加init()方法
+  // 给vue实例增加init()方法,vue的入口函数
   // 合并options/初始化操作
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this;
@@ -29,8 +29,10 @@ export function initMixin(Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    // 当前实例是vue实例不需要observer
     vm._isVue = true;
     // merge options
+
     // 合并options
     // 把用户传入的options和vue构造函数的options进行合并
     if (options && options._isComponent) {
@@ -49,6 +51,7 @@ export function initMixin(Vue: Class<Component>) {
     if (process.env.NODE_ENV !== "production") {
       initProxy(vm);
     } else {
+      // 渲染时的代理对象
       vm._renderProxy = vm;
     }
     // expose real self
@@ -56,20 +59,25 @@ export function initMixin(Vue: Class<Component>) {
     // vm的生命周期相关变量初始化
     // $children/$parent/$root/$refs
     initLifecycle(vm);
-    // vm的事件监听初始化，父组件绑定在当前组件上的事件
+    // vm的事件监听初始化，把父组件绑定的事件注册到当前组件上
     initEvents(vm);
-    // vm的编译render初始化
-    // $slots,$scopedSlots,$createElement,$attr,$listeners
+    // 初始化render中所使用到的h函数，以及$slots,$scopedSlots,$createElement,$attr,$listeners等属性
     initRender(vm);
-    // beforeCreate生命钩子回调
+    // callHook：触发生命周期函数，beforeCreate生命钩子回调
     callHook(vm, "beforeCreate");
-    // 把inject成员注入到vue实例上
-    initInjections(vm); // resolve injections before data/props
 
-    // 初始化vm的_props / methods / _data / computed / watch;
+    // initInjections和initProvide实现依赖注入
+
+    // 把inject成员注入到vue实例上
+    // 找vm.$options.inject中的所有属性，并且在vm._provided存在，即在父组件的provide中提供了这些属性时，把这些属性
+    // 注入到vue实例，并设置成响应式的
+    initInjections(vm); // resolve injections before data/props
+    // 初始化vue实例的状态  _props / methods / _data / computed / watch，并把这些属性的成员都注入到vue实例上
     initState(vm);
-    // 初始化provide
+    // 找到vm.$options.provide的所有属性，存储在vm._provided
     initProvide(vm); // resolve provide after data/props
+
+
     // created生命周期回调
     callHook(vm, "created");
 
@@ -81,6 +89,7 @@ export function initMixin(Vue: Class<Component>) {
     }
 
     if (vm.$options.el) {
+      // 挂载整个页面
       vm.$mount(vm.$options.el);
     }
   };

@@ -14,7 +14,7 @@ export function initUse(Vue: GlobalAPI) {
     // additional parameters
 
     // 注册插件
-    // 把数组的第一个元素去除
+    // 把arguments转换成数组，并把数组的第一个元素去除
     const args = toArray(arguments, 1);
     // 把this（Vue）插入到第一个元素的位置
     args.unshift(this);

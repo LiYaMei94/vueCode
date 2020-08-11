@@ -53,6 +53,7 @@ export function initState(vm: Component) {
   if (opts.data) {
     initData(vm);
   } else {
+    // options中没有data选项，设置data的初始值是{}并转换成响应式的
     observe((vm._data = {}), true /* asRootData */);
   }
   if (opts.computed) initComputed(vm, opts.computed);
@@ -61,6 +62,11 @@ export function initState(vm: Component) {
   }
 }
 
+/**
+ * 把props中的成员转换成响应式数据注入到vue上
+ * @param {*} vm 
+ * @param {*} propsOptions 
+ */
 function initProps(vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {};
   const props = (vm._props = {});
@@ -92,9 +98,9 @@ function initProps(vm: Component, propsOptions: Object) {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
             `Avoid mutating a prop directly since the value will be ` +
-              `overwritten whenever the parent component re-renders. ` +
-              `Instead, use a data or computed property based on the prop's ` +
-              `value. Prop being mutated: "${key}"`,
+            `overwritten whenever the parent component re-renders. ` +
+            `Instead, use a data or computed property based on the prop's ` +
+            `value. Prop being mutated: "${key}"`,
             vm
           );
         }
@@ -114,13 +120,15 @@ function initProps(vm: Component, propsOptions: Object) {
 
 function initData(vm: Component) {
   let data = vm.$options.data;
+  // getData(data, vm)：初始化组件中的data
+  // data || {}：初始化vue实例中的data
   data = vm._data = typeof data === "function" ? getData(data, vm) : data || {};
   if (!isPlainObject(data)) {
     data = {};
     process.env.NODE_ENV !== "production" &&
       warn(
         "data functions should return an object:\n" +
-          "https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function",
+        "https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function",
         vm
       );
   }
@@ -130,6 +138,7 @@ function initData(vm: Component) {
   const methods = vm.$options.methods;
   let i = keys.length;
   while (i--) {
+    // 判断data中的属性是否和props、methods中的属性重名
     const key = keys[i];
     if (process.env.NODE_ENV !== "production") {
       if (methods && hasOwn(methods, key)) {
@@ -143,14 +152,18 @@ function initData(vm: Component) {
       process.env.NODE_ENV !== "production" &&
         warn(
           `The data property "${key}" is already declared as a prop. ` +
-            `Use prop default value instead.`,
+          `Use prop default value instead.`,
           vm
         );
     } else if (!isReserved(key)) {
+      // proxy：把key注入到vue实例
+      // `_data`：在proxy函数中调用get方法时通过this['_data'][key]
       proxy(vm, `_data`, key);
     }
   }
   // observe data
+  // 把data转换成响应式对象
+  // 响应式处理的入口
   observe(data, true /* asRootData */);
 }
 
@@ -188,7 +201,7 @@ function initComputed(vm: Component, computed: Object) {
         vm,
         getter || noop,
         noop,
-        computedWatcherOptions
+        computedWatcherOptions // const computedWatcherOptions = { lazy: true }
       );
     }
 
@@ -264,6 +277,11 @@ function createGetterInvoker(fn) {
   };
 }
 
+/**
+ * 把选项中的methods注入到vue实例
+ * @param {*} vm 
+ * @param {*} methods 
+ */
 function initMethods(vm: Component, methods: Object) {
   const props = vm.$options.props;
   for (const key in methods) {
@@ -271,22 +289,27 @@ function initMethods(vm: Component, methods: Object) {
       if (typeof methods[key] !== "function") {
         warn(
           `Method "${key}" has type "${typeof methods[
-            key
+          key
           ]}" in the component definition. ` +
-            `Did you reference the function correctly?`,
+          `Did you reference the function correctly?`,
           vm
         );
       }
+      // methods中key和props不能重名
       if (props && hasOwn(props, key)) {
         warn(`Method "${key}" has already been defined as a prop.`, vm);
       }
+      // isReserved：判断方法名称是不是以下划线（_）或者$开头
+      // 以下划线（_）开头的属性是私有的，不能作为方法名
+      // 以$开头的成员认为是vue提供的成员，不能作为方法名
       if (key in vm && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +
-            `Avoid defining component methods that start with _ or $.`
+          `Avoid defining component methods that start with _ or $.`
         );
       }
     }
+    // bind：把当前函数的this指向改变为vue实例
     vm[key] =
       typeof methods[key] !== "function" ? noop : bind(methods[key], vm);
   }
@@ -311,10 +334,13 @@ function createWatcher(
   handler: any,
   options?: Object
 ) {
+  // 如果handler是js纯对象
   if (isPlainObject(handler)) {
     options = handler;
+    // 获取回调函数
     handler = handler.handler;
   }
+  // 如果是字符串，去methods中找想应的方法
   if (typeof handler === "string") {
     handler = vm[handler];
   }
@@ -337,7 +363,7 @@ export function stateMixin(Vue: Class<Component>) {
     dataDef.set = function () {
       warn(
         "Avoid replacing instance root $data. " +
-          "Use nested data properties instead.",
+        "Use nested data properties instead.",
         this
       );
     };
@@ -346,6 +372,9 @@ export function stateMixin(Vue: Class<Component>) {
     };
   }
 
+  // 原型上增加$data，$props属性
+  // dataDef和propsDef是属性的描述符
+  // 不能修改$data，$props属性
   Object.defineProperty(Vue.prototype, "$data", dataDef);
   Object.defineProperty(Vue.prototype, "$props", propsDef);
 
@@ -357,13 +386,18 @@ export function stateMixin(Vue: Class<Component>) {
     cb: any,
     options?: Object
   ): Function {
+    // 获取vue实例this
     const vm: Component = this;
+    // 如果cb是js纯对象，执行createWatcher
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options);
     }
     options = options || {};
+    // 标记用户watcher，如果是用户watcher在watcher.run()中访问回调函数需要加try catch
     options.user = true;
+    // 创建用户watcher对象
     const watcher = new Watcher(vm, expOrFn, cb, options);
+    // 判断 immediate 如果为 true，立即执行一次 cb 回调，并且把当前值传入
     if (options.immediate) {
       try {
         cb.call(vm, watcher.value);
@@ -375,6 +409,7 @@ export function stateMixin(Vue: Class<Component>) {
         );
       }
     }
+    // 返回取消监听的方法
     return function unwatchFn() {
       watcher.teardown();
     };

@@ -15,6 +15,7 @@ export function initExtend(Vue: GlobalAPI) {
 
   /**
    * Class inheritance
+   * 返回组件的构造函数
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {};
@@ -34,7 +35,7 @@ export function initExtend(Vue: GlobalAPI) {
       this._init(options);
     };
 
-    // 原型继承自vue
+    // Super=this=vue:原型继承自vue
     Sub.prototype = Object.create(Super.prototype);
     Sub.prototype.constructor = Sub;
     Sub.cid = cid++;

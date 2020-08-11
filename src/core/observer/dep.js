@@ -15,26 +15,30 @@ export default class Dep {
   id: number;
   subs: Array<Watcher>;
 
-  constructor () {
+  constructor() {
     this.id = uid++
     this.subs = []
   }
 
-  addSub (sub: Watcher) {
+  // 添加新的订阅者, watcher对象
+  addSub(sub: Watcher) {
     this.subs.push(sub)
   }
 
-  removeSub (sub: Watcher) {
+  // 移除订阅者, watcher对象
+  removeSub(sub: Watcher) {
     remove(this.subs, sub)
   }
 
-  depend () {
+  depend() {
     if (Dep.target) {
+      // 如果Dep.target存在即watcher存在,把dep对象添加到watcher的依赖中
+      // addDep是在watcher中定义的
       Dep.target.addDep(this)
     }
   }
 
-  notify () {
+  notify() {
     // stabilize the subscriber list first
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
@@ -52,15 +56,20 @@ export default class Dep {
 // The current target watcher being evaluated.
 // This is globally unique because only one watcher
 // can be evaluated at a time.
+// Dep.target：存储当前正在执行的watcher对象，同一时间只有一个watcher在被使用
 Dep.target = null
-const targetStack = []
 
-export function pushTarget (target: ?Watcher) {
+// 每一个组件对应一个watcher对象，如果组件有嵌套，会先渲染子组件，父组件会被挂载起来，所以父组件对应的
+// watcher对象也应该被储存起来，当子组件渲染完毕，watcher会从栈中弹出，继续执行父组件的渲染
+const targetStack = []
+// 入栈并将当前 watcher 赋值给Dep.target
+export function pushTarget(target: ?Watcher) {
   targetStack.push(target)
   Dep.target = target
 }
 
-export function popTarget () {
+export function popTarget() {
+  // 出栈
   targetStack.pop()
   Dep.target = targetStack[targetStack.length - 1]
 }

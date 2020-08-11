@@ -19,10 +19,11 @@ import {
 } from "../util/index";
 
 export function initGlobalAPI(Vue: GlobalAPI) {
-  // config
   const configDef = {};
   configDef.get = () => config;
   if (process.env.NODE_ENV !== "production") {
+    // 如果在生产模式下，不能给config赋值
+    // 给config赋值会触发configDef.set，发出警告：不要给Vue.config重新赋值
     configDef.set = () => {
       warn(
         "Do not replace the Vue.config object, set individual fields instead."
@@ -30,11 +31,9 @@ export function initGlobalAPI(Vue: GlobalAPI) {
     };
   }
   // 初始化Vue.config，是vue的静态成员
+  // 在src\platforms\web\runtime\index.js中给config挂载成员
   Object.defineProperty(Vue, "config", configDef);
 
-  // exposed util methods.
-  // NOTE: these are not considered part of the public API - avoid relying on
-  // them unless you are aware of the risk.
   // 这些方法不能被视为全局api的一部分，除非你已经意识到某些风险，否则不要去依赖他们
   Vue.util = {
     warn,
@@ -54,31 +53,25 @@ export function initGlobalAPI(Vue: GlobalAPI) {
     observe(obj);
     return obj;
   };
-
-  // 初始化Vue.options对象
+  // 初始化Vue.options对象，该对象没有原型
   Vue.options = Object.create(null);
-  // const ASSET_TYPES = [
-  //   'component',
-  //   'directive',
-  //   'filter'
-  // ]
+  // ASSET_TYPES:'component','directive','filter'
   ASSET_TYPES.forEach((type) => {
-    // 给Vue.options挂载components/directives/filters
-    // 存储全局的组件、指令、过滤器
-    Vue.options[type + "s"] = Object.create(null);
+      // 给Vue.options挂载components/directives/filters
+      // Vue.components存储全局的组件
+      // Vue.directives存储全局的指令
+      // Vue.filters存储全局的过滤器
+      Vue.options[type + "s"] = Object.create(null);
   });
-
   // this is used to identify the "base" constructor to extend all plain-object
   // components with in Weex's multi-instance scenarios.
-
   Vue.options._base = Vue;
 
   // builtInComponents导出KeepAlive
+  // extend:在src\shared\util.js中定义，实现的是浅拷贝
   // 设置keep-alive组件
-  // extend实现的是浅拷贝
   extend(Vue.options.components, builtInComponents);
-
-  // 注册Vue.use() 用来注册组件
+  // 注册Vue.use() 用来注册插件
   initUse(Vue);
   // 注册Vue.mixin() 实现混入
   initMixin(Vue);
