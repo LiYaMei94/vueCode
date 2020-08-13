@@ -9,7 +9,7 @@ type CompiledFunctionResult = {
   staticRenderFns: Array<Function>;
 };
 
-function createFunction (code, errors) {
+function createFunction(code, errors) {
   try {
     return new Function(code)
   } catch (err) {
@@ -18,19 +18,14 @@ function createFunction (code, errors) {
   }
 }
 
-export function createCompileToFunctionFn (compile: Function): Function {
+export function createCompileToFunctionFn(compile: Function): Function {
+  // cache：是为了通过闭包缓存编译之后的结果
   const cache = Object.create(null)
-
-  return function compileToFunctions (
-    template: string,
-    options?: CompilerOptions,
-    vm?: Component
-  ): CompiledFunctionResult {
+  return function compileToFunctions(template: string, options?: CompilerOptions, vm?: Component): CompiledFunctionResult {
+    // options：vue中的options
     options = extend({}, options)
     const warn = options.warn || baseWarn
     delete options.warn
-
-    /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production') {
       // detect possible CSP restriction
       try {
@@ -47,18 +42,17 @@ export function createCompileToFunctionFn (compile: Function): Function {
         }
       }
     }
-
-    // check cache
+    // delimiters：只有完整版才有，改变插值表达式使用的符号
     const key = options.delimiters
       ? String(options.delimiters) + template
       : template
+    // 1.读取缓存中的编译结果(CompiledFunctionResult)，如果有直接返回
+    // 把模板的内容作为key
     if (cache[key]) {
       return cache[key]
     }
-
-    // compile
+    //2.把用户传入的模板和options传递给compile函数，返回一个对象{ render, staticRenderFns }
     const compiled = compile(template, options)
-
     // check compilation errors/tips
     if (process.env.NODE_ENV !== 'production') {
       if (compiled.errors && compiled.errors.length) {
@@ -86,19 +80,14 @@ export function createCompileToFunctionFn (compile: Function): Function {
         }
       }
     }
-
-    // turn code into functions
     const res = {}
     const fnGenErrors = []
+    // 3.执行createFunction，把字符串形式的js代码转换成js函数
+    // createFunction：内部使用new Function(code)把字符串形式的js代码转换成函数
     res.render = createFunction(compiled.render, fnGenErrors)
     res.staticRenderFns = compiled.staticRenderFns.map(code => {
       return createFunction(code, fnGenErrors)
     })
-
-    // check function generation errors.
-    // this should only happen if there is a bug in the compiler itself.
-    // mostly for codegen development use
-    /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production') {
       if ((!compiled.errors || !compiled.errors.length) && fnGenErrors.length) {
         warn(
@@ -108,7 +97,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
         )
       }
     }
-
+    // 4.缓存并返回res对象{ render, staticRenderFns }
     return (cache[key] = res)
   }
 }

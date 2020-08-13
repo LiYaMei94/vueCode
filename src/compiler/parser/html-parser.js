@@ -46,12 +46,12 @@ const encodedAttrWithNewLines = /&(?:lt|gt|quot|amp|#39|#10|#9);/g
 const isIgnoreNewlineTag = makeMap('pre,textarea', true)
 const shouldIgnoreFirstNewline = (tag, html) => tag && isIgnoreNewlineTag(tag) && html[0] === '\n'
 
-function decodeAttr (value, shouldDecodeNewlines) {
+function decodeAttr(value, shouldDecodeNewlines) {
   const re = shouldDecodeNewlines ? encodedAttrWithNewLines : encodedAttr
   return value.replace(re, match => decodingMap[match])
 }
 
-export function parseHTML (html, options) {
+export function parseHTML(html, options) {
   const stack = []
   const expectHTML = options.expectHTML
   const isUnaryTag = options.isUnaryTag || no
@@ -64,20 +64,21 @@ export function parseHTML (html, options) {
     if (!lastTag || !isPlainTextElement(lastTag)) {
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
-        // Comment:
+        // Comment:注释节点
         if (comment.test(html)) {
           const commentEnd = html.indexOf('-->')
-
           if (commentEnd >= 0) {
             if (options.shouldKeepComment) {
               options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
             }
+            // 从处理完的位置截取剩余的html
             advance(commentEnd + 3)
             continue
           }
         }
 
         // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
+        // 条件注释
         if (conditionalComment.test(html)) {
           const conditionalEnd = html.indexOf(']>')
 
@@ -87,14 +88,14 @@ export function parseHTML (html, options) {
           }
         }
 
-        // Doctype:
+        // Doctype:文档类型声明
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
           advance(doctypeMatch[0].length)
           continue
         }
 
-        // End tag:
+        // End tag:结束标签
         const endTagMatch = html.match(endTag)
         if (endTagMatch) {
           const curIndex = index
@@ -103,7 +104,7 @@ export function parseHTML (html, options) {
           continue
         }
 
-        // Start tag:
+        // Start tag:开始标签
         const startTagMatch = parseStartTag()
         if (startTagMatch) {
           handleStartTag(startTagMatch)
@@ -179,12 +180,12 @@ export function parseHTML (html, options) {
   // Clean up any remaining tags
   parseEndTag()
 
-  function advance (n) {
+  function advance(n) {
     index += n
     html = html.substring(n)
   }
 
-  function parseStartTag () {
+  function parseStartTag() {
     const start = html.match(startTagOpen)
     if (start) {
       const match = {
@@ -209,7 +210,7 @@ export function parseHTML (html, options) {
     }
   }
 
-  function handleStartTag (match) {
+  function handleStartTag(match) {
     const tagName = match.tagName
     const unarySlash = match.unarySlash
 
@@ -252,7 +253,7 @@ export function parseHTML (html, options) {
     }
   }
 
-  function parseEndTag (tagName, start, end) {
+  function parseEndTag(tagName, start, end) {
     let pos, lowerCasedTagName
     if (start == null) start = index
     if (end == null) end = index

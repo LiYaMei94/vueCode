@@ -4,12 +4,14 @@ import { extend } from 'shared/util'
 import { detectErrors } from './error-detector'
 import { createCompileToFunctionFn } from './to-function'
 
-export function createCompilerCreator (baseCompile: Function): Function {
-  return function createCompiler (baseOptions: CompilerOptions) {
-    function compile (
+export function createCompilerCreator(baseCompile: Function): Function {
+  return function createCompiler(baseOptions: CompilerOptions) {
+    function compile(
       template: string,
-      options?: CompilerOptions
+      options?: CompilerOptions// 调用compileToFunctions传入的选项
     ): CompiledResult {
+
+      // finalOptions是为了合并baseOptions和接收的compileoptions
       const finalOptions = Object.create(baseOptions)
       const errors = []
       const tips = []
@@ -18,6 +20,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
         (tip ? tips : errors).push(msg)
       }
 
+      // 如果options存在，合并options和baseOptions
       if (options) {
         if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
           // $flow-disable-line
@@ -58,6 +61,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
 
       finalOptions.warn = warn
 
+      // baseCompile：把模板编译成render函数
       const compiled = baseCompile(template.trim(), finalOptions)
       if (process.env.NODE_ENV !== 'production') {
         detectErrors(compiled.ast, warn)
@@ -69,7 +73,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
 
     return {
       compile,
-      compileToFunctions: createCompileToFunctionFn(compile)
+      compileToFunctions: createCompileToFunctionFn(compile)// 模板编译的入口
     }
   }
 }
