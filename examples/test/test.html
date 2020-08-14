@@ -31,47 +31,47 @@
         }
       },
     })
-    // expOrFn 是表达式 
-    vm.$watch('msg', function (newVal, oldVal) {
-      console.log(newVal, oldVal)
-    })
-    vm.$watch('user.firstName', function (newVal, oldVal) {
-      console.log(newVal)
-    })
-    // expOrFn 是函数 
-    vm.$watch(function () {
-      return this.a + this.b
-    }, function (newVal, oldVal) {
-      console.log(newVal)
-    })
-    // expOrFn 是对象
-    vm.$watch('msg', {
-      handler: function (newVal, oldVal) {
-        console.log(newVal)
-      }
-    })
-    // deep 是 true，消耗性能 
-    vm.$watch('user', function (newVal, oldVal) {
-      // 此时的 newVal 是 user 对象 
-      console.log(newVal)
-    }, {
-      deep: true
-    })
-    // immediate 是 true ，立即执行回调函数
-    vm.$watch('msg', function (newVal, oldVal) {
-      console.log(newVal)
-    }, {
-      immediate: true
-    })
+    // // expOrFn 是表达式 
+    // vm.$watch('msg', function (newVal, oldVal) {
+    //   console.log(newVal, oldVal)
+    // })
+    // vm.$watch('user.firstName', function (newVal, oldVal) {
+    //   console.log(newVal)
+    // })
+    // // expOrFn 是函数 
+    // vm.$watch(function () {
+    //   return this.a + this.b
+    // }, function (newVal, oldVal) {
+    //   console.log(newVal)
+    // })
+    // // expOrFn 是对象
+    // vm.$watch('msg', {
+    //   handler: function (newVal, oldVal) {
+    //     console.log(newVal)
+    //   }
+    // })
+    // // deep 是 true，消耗性能 
+    // vm.$watch('user', function (newVal, oldVal) {
+    //   // 此时的 newVal 是 user 对象 
+    //   console.log(newVal)
+    // }, {
+    //   deep: true
+    // })
+    // // immediate 是 true ，立即执行回调函数
+    // vm.$watch('msg', function (newVal, oldVal) {
+    //   console.log(newVal)
+    // }, {
+    //   immediate: true
+    // })
 
-    children = [
-      [2, 3],
-      [
-        [1, 2],
-        [45]
-      ]
-    ]
-    console.log(Array.prototype.concat.apply([], children))
+    // children = [
+    //   [2, 3],
+    //   [
+    //     [1, 2],
+    //     [45]
+    //   ]
+    // ]
+    // console.log(Array.prototype.concat.apply([], children))
 
   </script>
 

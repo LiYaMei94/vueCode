@@ -18,12 +18,17 @@ const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s
 const dynamicArgAttribute = /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z${unicodeRegExp.source}]*`
 const qnameCapture = `((?:${ncname}\\:)?${ncname})`
+
 const startTagOpen = new RegExp(`^<${qnameCapture}`)
 const startTagClose = /^\s*(\/?)>/
+// 匹配标签结束位置：</a>
 const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`)
+// 匹配文档类型声明
 const doctype = /^<!DOCTYPE [^>]+>/i
 // #7298: escape - to avoid being passed as HTML comment when inlined in page
+// 匹配注释节点
 const comment = /^<!\--/
+// 匹配条件注释节点
 const conditionalComment = /^<!\[/
 
 // Special Elements (can contain anything)
@@ -58,20 +63,25 @@ export function parseHTML(html, options) {
   const canBeLeftOpenTag = options.canBeLeftOpenTag || no
   let index = 0
   let last, lastTag
+  // 把处理完成的html截取掉，然后处理剩余的html
   while (html) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
+    // 确保当前不是在script,style,textarea标签中
     if (!lastTag || !isPlainTextElement(lastTag)) {
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
         // Comment:注释节点
         if (comment.test(html)) {
+          // <!-- <p></p> -->
+          // 找到注释节点的结束位置
           const commentEnd = html.indexOf('-->')
           if (commentEnd >= 0) {
             if (options.shouldKeepComment) {
+              // comment：调用parseHTML时传递的方法，作用是把已经匹配到的注释节点存储到父元素的ast对象中
               options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
             }
-            // 从处理完的位置截取剩余的html
+            // advance：记录匹配到的最新位置，从最新位置截取剩余的模板字符串重新赋值给html变量
             advance(commentEnd + 3)
             continue
           }
@@ -79,6 +89,7 @@ export function parseHTML(html, options) {
 
         // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
         // 条件注释
+        // <!--[if IE]> html语句 <![endif]-->
         if (conditionalComment.test(html)) {
           const conditionalEnd = html.indexOf(']>')
 
@@ -97,6 +108,15 @@ export function parseHTML(html, options) {
 
         // End tag:结束标签
         const endTagMatch = html.match(endTag)
+        // endTagMatch的内容
+        // endTagMatch = {
+        //   0: "</p>",
+        //   1: "p",
+        //   groups: undefined,
+        //   index: 0,
+        //   input: "</p>↵    <p>{{b}}</p>↵    <p>{{msg}}</p>↵    <p></p>↵  </div>",
+        //   length: 2
+        // }
         if (endTagMatch) {
           const curIndex = index
           advance(endTagMatch[0].length)
@@ -181,9 +201,12 @@ export function parseHTML(html, options) {
   parseEndTag()
 
   function advance(n) {
+    // 记录当前最新的位置
     index += n
+    // 从最新的位置截取html
     html = html.substring(n)
   }
+
 
   function parseStartTag() {
     const start = html.match(startTagOpen)
@@ -210,6 +233,10 @@ export function parseHTML(html, options) {
     }
   }
 
+  /**
+   * 处理开始标签，把遇到的开始标签存在栈中stack
+   * @param {*} match 
+   */
   function handleStartTag(match) {
     const tagName = match.tagName
     const unarySlash = match.unarySlash
@@ -244,6 +271,7 @@ export function parseHTML(html, options) {
     }
 
     if (!unary) {
+      // 找到的开始标签入栈
       stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
       lastTag = tagName
     }
@@ -253,12 +281,19 @@ export function parseHTML(html, options) {
     }
   }
 
+  /**
+   * 解析结束标签
+   * @param {*} tagName 
+   * @param {*} start 
+   * @param {*} end 
+   */
   function parseEndTag(tagName, start, end) {
     let pos, lowerCasedTagName
     if (start == null) start = index
     if (end == null) end = index
 
     // Find the closest opened tag of the same type
+    // 从stack栈中寻找最近入栈的一个标签和当前的结束标签进行匹配
     if (tagName) {
       lowerCasedTagName = tagName.toLowerCase()
       for (pos = stack.length - 1; pos >= 0; pos--) {

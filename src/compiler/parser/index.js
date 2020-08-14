@@ -80,6 +80,7 @@ export function parse(
   template: string,
   options: CompilerOptions
 ): ASTElement | void {
+  // 解析options里面的成员
   warn = options.warn || baseWarn
 
   platformIsPreTag = options.isPreTag || no
@@ -213,7 +214,8 @@ export function parse(
     outputSourceRange: options.outputSourceRange,
 
     // 解析过程的回调函数
-    // 开始标签
+
+    // 解析开始标签
     start(tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -304,7 +306,7 @@ export function parse(
         closeElement(element)
       }
     },
-    // 结束标签
+    // 解析结束标签
     end(tag, start, end) {
       const element = stack[stack.length - 1]
       // pop stack
@@ -315,7 +317,7 @@ export function parse(
       }
       closeElement(element)
     },
-    // 文本内容
+    // 解析文本内容
     chars(text: string, start: number, end: number) {
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
@@ -387,10 +389,11 @@ export function parse(
         }
       }
     },
-    // 注释标签
+    // 解析注释标签
     comment(text: string, start, end) {
       // adding anything as a sibling to the root node is forbidden
       // comments should still be allowed, but ignored
+      // 如果父元素的ast对象存在
       if (currentParent) {
         const child: ASTText = {
           type: 3,
@@ -401,6 +404,7 @@ export function parse(
           child.start = start
           child.end = end
         }
+        // 把当前匹配到的注释节点添加到父元素的ast对象
         currentParent.children.push(child)
       }
     }
