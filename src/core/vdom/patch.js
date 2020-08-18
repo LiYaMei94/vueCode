@@ -233,11 +233,14 @@ export function createPatchFunction(backend) {
     }
   }
 
+  // 创建组件实例，挂载到真实 DOM
   function createComponent(vnode, insertedVnodeQueue, parentElm, refElm) {
     let i = vnode.data;
     if (isDef(i)) {
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive;
       if (isDef((i = i.hook)) && isDef((i = i.init))) {
+        // 调用init方法,创建和挂载组件实例
+        // init() 的过程中创建好了组件的真实 DOM,挂载到了 vnode.elm 上
         i(vnode, false /* hydrating */);
       }
       // after calling the init hook, if the vnode is a child component
@@ -245,7 +248,9 @@ export function createPatchFunction(backend) {
       // component also has set the placeholder vnode's elm.
       // in that case we can just return the element and be done.
       if (isDef(vnode.componentInstance)) {
+        // 调用钩子函数（VNode的钩子函数初始化属性/事件/样式等，组件的钩子函数）
         initComponent(vnode, insertedVnodeQueue);
+        // 把组件对应的 DOM 插入到父元素中
         insert(parentElm, vnode.elm, refElm);
         if (isTrue(isReactivated)) {
           reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm);
@@ -255,6 +260,7 @@ export function createPatchFunction(backend) {
     }
   }
 
+  // 调用钩子函数，设置局部作用于样式
   function initComponent(vnode, insertedVnodeQueue) {
     if (isDef(vnode.data.pendingInsert)) {
       insertedVnodeQueue.push.apply(
@@ -265,7 +271,9 @@ export function createPatchFunction(backend) {
     }
     vnode.elm = vnode.componentInstance.$el;
     if (isPatchable(vnode)) {
+      // 调用钩子函数
       invokeCreateHooks(vnode, insertedVnodeQueue);
+      // 设置局部作用于样式
       setScope(vnode);
     } else {
       // empty component root.

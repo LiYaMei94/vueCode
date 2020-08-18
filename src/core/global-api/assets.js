@@ -37,6 +37,7 @@ export function initAssetRegisters(Vue: GlobalAPI) {
         }
 
         // 全局注册，存储资源并赋值
+        // 挂载到 Vue 实例的 vm.options.component.componentName =Ctor
         this.options[type + "s"][id] = definition;
         return definition;
       }

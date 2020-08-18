@@ -30,7 +30,7 @@ export class CodegenState {
     const isReservedTag = options.isReservedTag || no
     this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
     this.onceId = 0
-    this.staticRenderFns = [] // 存储静态根节点生成的代码
+    this.staticRenderFns = [] // 存储静态根节点生成的字符串代码
     this.pre = false// 当前处理的节点是不是使用v-pre标记的
   }
 }
@@ -56,10 +56,12 @@ export function generate(
 }
 
 export function genElement(el: ASTElement, state: CodegenState): string {
+  // 父节点是v-pre标记的节点，子节点也是静态的
   if (el.parent) {
     el.pre = el.pre || el.parent.pre
   }
-
+  // 如果静态根节点已经被处理过了，就不再处理
+  // staticProcessed：标记当前的节点是否被处理了
   if (el.staticRoot && !el.staticProcessed) {
     return genStatic(el, state)
   } else if (el.once && !el.onceProcessed) {
@@ -69,20 +71,22 @@ export function genElement(el: ASTElement, state: CodegenState): string {
   } else if (el.if && !el.ifProcessed) {
     return genIf(el, state)
   } else if (el.tag === 'template' && !el.slotTarget && !state.pre) {
-    return genChildren(el, state) || 'void 0'
+    // 如果是template且不是静态的，会生成el的子节点和对应的代码
+    return genChildren(el, state) || 'void 0' // void 0就是undefined
   } else if (el.tag === 'slot') {
     return genSlot(el, state)
   } else {
-    // component or element
+    // 处理组件或者内置的标签
     let code
     if (el.component) {
       code = genComponent(el.component, el, state)
     } else {
       let data
       if (!el.plain || (el.pre && state.maybeComponent(el))) {
+        // 把ast对象的相应属性转换成createElement所需要的字符串形式
         data = genData(el, state)
       }
-
+      // 把el中的子节点转换成createElement中需要的数组形式
       const children = el.inlineTemplate ? null : genChildren(el, state, true)
       code = `_c('${el.tag}'${
         data ? `,${data}` : '' // data
@@ -100,7 +104,7 @@ export function genElement(el: ASTElement, state: CodegenState): string {
 
 // hoist static sub-trees out
 function genStatic(el: ASTElement, state: CodegenState): string {
-  el.staticProcessed = true
+  el.staticProcessed = true // 标记当前节点已经被处理
   // Some elements (templates) need to behave differently inside of a v-pre
   // node.  All pre nodes are static roots, so we can use this as a location to
   // wrap a state change and reset it upon exiting the pre node.
@@ -110,6 +114,7 @@ function genStatic(el: ASTElement, state: CodegenState): string {
   }
   state.staticRenderFns.push(`with(this){return ${genElement(el, state)}}`)
   state.pre = originalPreState
+  // _m就是renderStatic
   return `_m(${
     state.staticRenderFns.length - 1
     }${
@@ -484,6 +489,7 @@ export function genChildren(
         : ``
       return `${(altGenElement || genElement)(el, state)}${normalizationType}`
     }
+    // normalizationType：表示如何处理数组
     const normalizationType = checkSkip
       ? getNormalizationType(children, state.maybeComponent)
       : 0
@@ -526,26 +532,32 @@ function needsNormalization(el: ASTElement): boolean {
 }
 
 function genNode(node: ASTNode, state: CodegenState): string {
+  // 标签
   if (node.type === 1) {
     return genElement(node, state)
   } else if (node.type === 3 && node.isComment) {
+    // 注释节点
     return genComment(node)
   } else {
+    // 文本节点
     return genText(node)
   }
 }
 
 export function genText(text: ASTText | ASTExpression): string {
+  // _v就是createTextVNode
   return `_v(${text.type === 2
-    ? text.expression // no need for () because already wrapped in _s()
+    ? text.expression // 处理表达式,直接返回，该表达式已经使用_s(toString)转换成了字符串
     : transformSpecialNewlines(JSON.stringify(text.text))
+    // transformSpecialNewlines：修正代码中的Unicode换行
     })`
 }
 
 export function genComment(comment: ASTText): string {
+  // _e就是_ecreateEmptyVNode
+  // JSON.stringify:给字符串加上引号
   return `_e(${JSON.stringify(comment.text)})`
 }
-
 function genSlot(el: ASTElement, state: CodegenState): string {
   const slotName = el.slotName || '"default"'
   const children = genChildren(el, state)
